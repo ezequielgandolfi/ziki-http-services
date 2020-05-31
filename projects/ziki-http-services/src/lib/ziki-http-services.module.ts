@@ -2,7 +2,10 @@ import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { HttpDataService } from './services/data-injection.service';
 
-export let DATA_SERVICE: HttpDataService;
+let _dataService: HttpDataService;
+export function DataService(): HttpDataService {
+  return _dataService;
+}
 
 @NgModule({
   declarations: [],
@@ -14,13 +17,7 @@ export let DATA_SERVICE: HttpDataService;
   ]
 })
 export class ZikiHttpServicesModule { 
-
   constructor(private dataServices: HttpDataService) {
-    DATA_SERVICE = this.dataServices;
+    _dataService = this.dataServices;
   }
-
-  get DataService(): HttpDataService {
-    return DATA_SERVICE;
-  }
-
 }

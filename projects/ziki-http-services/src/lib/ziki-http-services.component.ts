@@ -1,9 +1,7 @@
 import { HttpClient } from "@angular/common/http";
-import { isNullOrUndefined } from "util";
 import { ResponseObjectModel, IServiceRequest } from "./models/request.model";
 import { take } from "rxjs/operators";
-import { DATA_SERVICE } from "./ziki-http-services.module";
-import { ZikiUriUtils } from "ziki-ng-utils";
+import { DataService } from "./ziki-http-services.module";
 
 export class ZikiHttpServices<T> {
     private _type;
@@ -17,7 +15,7 @@ export class ZikiHttpServices<T> {
     public static getInstance<T>(typeOrUrl?: any, url?: string): ZikiHttpServices<T> {
         let _type;
         let _url;
-        if (isNullOrUndefined(typeOrUrl)) {
+        if (!typeOrUrl) {
             _type = Object;
         }
         else if (typeOrUrl instanceof String || typeof(typeOrUrl) == "string") {
@@ -28,7 +26,7 @@ export class ZikiHttpServices<T> {
             _type = typeOrUrl;
             _url = url;
         }
-        let instance = new ZikiHttpServices<T>(_type, DATA_SERVICE.HttpClient).setURL(_url);
+        let instance = new ZikiHttpServices<T>(_type, DataService().HttpClient).setURL(_url);
         return instance;
     }
  
@@ -134,7 +132,7 @@ export class ZikiHttpServices<T> {
         let params = this._pathParams;
         if (params) {
             return newUrl.replace(/{{([\w\d\-]+)}}/gi, function(subs, args: string) { 
-                return ZikiUriUtils.encodeURIParam(params[args.trim()]);
+                return this.encodeURIParam(params[args.trim()]);
             });
         }
         return newUrl;
@@ -144,7 +142,7 @@ export class ZikiHttpServices<T> {
         let _fullUrl = url;
         let _params = [];
         if (this._queryParams)
-            Object.keys(this._queryParams).filter(key => !isNullOrUndefined(this._queryParams[key])).forEach(key => _params.push(key + '=' + ZikiUriUtils.encodeURIParam(this._queryParams[key])));
+            Object.keys(this._queryParams).filter(key => !!this._queryParams[key]).forEach(key => _params.push(key + '=' + this.encodeURIParam(this._queryParams[key])));
         _params = [..._params,...this.additionalQueryParams()];
         if (_params.length > 0)
             _fullUrl += ((_fullUrl.indexOf('?') < 0) ? '?' : '&') + _params.join('&');
@@ -158,7 +156,7 @@ export class ZikiHttpServices<T> {
 
     //#region Conversion
     protected resultFactory(data: any): T | T[] {
-        if (isNullOrUndefined(data))
+        if (!data)
             return;
         if (this.resultIsArray(data)) {
             let newItems: T[] = data.map(item => {return this.itemFactory(item)});
@@ -184,6 +182,25 @@ export class ZikiHttpServices<T> {
 
     protected getServiceRequest(url?: string): IServiceRequest {
         return this._http;
+    }
+    //#endregion
+
+    //#region internal
+    encodeURIParam(data: any): string {
+        if (data) {
+            if (data instanceof Boolean || typeof (data) === "boolean") {
+                return data.toString();
+            }
+            if (data instanceof Date) {
+                return [
+                    data.getFullYear().toString().padStart(4, '0'),
+                    (data.getMonth() + 1).toString().padStart(2, '0'),
+                    data.getDate().toString().padStart(2, '0')
+                ].join('-');
+            }
+            return encodeURIComponent(data);
+        }
+        return '';
     }
     //#endregion
 
