@@ -130,9 +130,10 @@ export class ZikiHttpServices<T> {
     private appendPathParams(url: string): string {
         let newUrl = url;
         let params = this._pathParams;
+        let encode = this.encodeURIParam.bind(this);
         if (params) {
             return newUrl.replace(/{{([\w\d\-]+)}}/gi, function(subs, args: string) { 
-                return this.encodeURIParam(params[args.trim()]);
+                return encode(params[args.trim()]);
             });
         }
         return newUrl;
@@ -141,8 +142,9 @@ export class ZikiHttpServices<T> {
     private appendQueryParams(url: string): string {
         let _fullUrl = url;
         let _params = [];
+        let encode = this.encodeURIParam.bind(this);
         if (this._queryParams)
-            Object.keys(this._queryParams).filter(key => !!this._queryParams[key]).forEach(key => _params.push(key + '=' + this.encodeURIParam(this._queryParams[key])));
+            Object.keys(this._queryParams).filter(key => !!this._queryParams[key]).forEach(key => _params.push(key + '=' + encode(this._queryParams[key])));
         _params = [..._params,...this.additionalQueryParams()];
         if (_params.length > 0)
             _fullUrl += ((_fullUrl.indexOf('?') < 0) ? '?' : '&') + _params.join('&');
